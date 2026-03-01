@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"log/slog"
 	"sync"
 	"tasks/task_2/todo_api/domain"
@@ -61,7 +62,7 @@ func (r *postgresRepo) GetByID(id int) (domain.Todo, bool) {
 		Scan(&t.ID, &t.Task, &t.Completed)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Todo{}, false
 		}
 		slog.Error("GetByID xatosi:", "error", err)
