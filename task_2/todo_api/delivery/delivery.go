@@ -19,10 +19,19 @@ func (h *TodoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Juda oddiy router logikasi
 	path := strings.TrimPrefix(r.URL.Path, "/todos")
 	id, _ := strconv.Atoi(strings.TrimPrefix(path, "/"))
-
 	switch {
 	case r.Method == http.MethodGet && path == "":
 		err := json.NewEncoder(w).Encode(h.UC.List())
+		if err != nil {
+			return
+		}
+	case r.Method == http.MethodGet && id != 0:
+		todo, ok := h.UC.Get(id)
+		if !ok {
+			w.WriteHeader(404)
+			return
+		}
+		err := json.NewEncoder(w).Encode(todo)
 		if err != nil {
 			return
 		}
