@@ -55,7 +55,7 @@ func (r *postgresRepo) Create(t domain.Todo) domain.Todo {
 	return t
 }
 
-// GetByID - ID bo'yicha bitta todo olish
+// GetByID - ID bo'yicha bitta
 func (r *postgresRepo) GetByID(id int) (domain.Todo, bool) {
 	var t domain.Todo
 	err := r.db.QueryRow("SELECT id, task, completed FROM todos WHERE id = $1", id).
