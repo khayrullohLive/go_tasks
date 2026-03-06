@@ -15,16 +15,22 @@ func SetupRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 	authRepo := repository.NewAuthRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
+	postRepo := repository.NewPostRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	categoryRepo := repository.NewCategoryRepository(db)
+	tagsRepo := repository.NewTagRepository(db)
+	searchRepo := repository.NewSearchRepository(db)
+	statsRepo := repository.NewStatsRepository(db)
 	r.Use(middleware.CORSMiddleware())
 
 	authHandler := handlers.NewAuthHandler(cfg.JWTSecret, authRepo)
-	postHandler := handlers.NewPostHandler(db)
+	postHandler := handlers.NewPostHandler(postRepo)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
-	userHandler := handlers.NewUserHandler(db)
-	categoryHandler := handlers.NewCategoryHandler(db)
-	tagHandler := handlers.NewTagHandler(db)
-	searchHandler := handlers.NewSearchHandler(db)
-	statsHandler := handlers.NewStatsHandler(db)
+	userHandler := handlers.NewUserHandler(userRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
+	tagHandler := handlers.NewTagHandler(tagsRepo)
+	searchHandler := handlers.NewSearchHandler(searchRepo)
+	statsHandler := handlers.NewStatsHandler(statsRepo)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
