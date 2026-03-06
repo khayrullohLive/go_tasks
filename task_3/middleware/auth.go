@@ -79,7 +79,7 @@ func OptionalAuth(jwtSecret string) gin.HandlerFunc {
 	}
 }
 
-// CORS Middleware
+// CORSMiddleware CORS Middleware
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

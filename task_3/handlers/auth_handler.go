@@ -51,6 +51,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Email:    req.Email,
 		Password: hashedPassword,
 		FullName: req.FullName,
+		IsAdmin:  req.IsAdmin,
 	}
 
 	// DB ga yozish — repositoryga topshirildi

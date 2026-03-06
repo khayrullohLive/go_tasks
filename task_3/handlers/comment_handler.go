@@ -14,13 +14,14 @@ import (
 
 type CommentHandler struct {
 	repository repository.CommentRepository
+	// ✅ db yo'q — faqat repository
 }
 
 func NewCommentHandler(repo repository.CommentRepository) *CommentHandler {
 	return &CommentHandler{repository: repo}
 }
 
-// GET /api/posts/:id/comments
+// GetComments GET /api/posts/:id/comments?page=1&page_size=20
 func (h *CommentHandler) GetComments(c *gin.Context) {
 	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -28,19 +29,34 @@ func (h *CommentHandler) GetComments(c *gin.Context) {
 		return
 	}
 
-	comments, total, err := h.repository.FindByPostID(uint(postID))
+	// ✅ CommentQuery endi ishlatiladi
+	var query models.CommentQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Noto'g'ri query parametrlar"})
+		return
+	}
+
+	comments, total, err := h.repository.FindByPostID(uint(postID), query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Kommentariylarni olishda xato"})
 		return
 	}
 
+	totalPages := int(total) / query.PageSize
+	if int(total)%query.PageSize != 0 {
+		totalPages++
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"data":  comments,
-		"total": total,
+		"data":        comments,
+		"total":       total,
+		"page":        query.Page,
+		"page_size":   query.PageSize,
+		"total_pages": totalPages,
 	})
 }
 
-// POST /api/posts/:id/comments
+// CreateComment POST /api/posts/:id/comments
 func (h *CommentHandler) CreateComment(c *gin.Context) {
 	userID, _ := middleware.GetCurrentUserID(c)
 	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -85,7 +101,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 	c.JSON(http.StatusCreated, comment)
 }
 
-// PUT /api/comments/:id
+// UpdateComment PUT /api/comments/:id
 func (h *CommentHandler) UpdateComment(c *gin.Context) {
 	userID, _ := middleware.GetCurrentUserID(c)
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -127,7 +143,7 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 	c.JSON(http.StatusOK, comment)
 }
 
-// DELETE /api/comments/:id
+// DeleteComment DELETE /api/comments/:id
 func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	userID, _ := middleware.GetCurrentUserID(c)
 	isAdmin, _ := c.Get("is_admin")
@@ -166,7 +182,7 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse{Message: "Kommentariy o'chirildi"})
 }
 
-// POST /api/comments/:id/like
+// LikeComment POST /api/comments/:id/like
 func (h *CommentHandler) LikeComment(c *gin.Context) {
 	userID, _ := middleware.GetCurrentUserID(c)
 	commentID, err := strconv.ParseUint(c.Param("id"), 10, 32)
